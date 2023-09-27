@@ -68,23 +68,22 @@ class RecipeIndex(Resource):
         
     def post(self):
         json = request.get_json()
-        if not session.get('user_id'):
-            return make_response({"error":"unauthorized"}, 401)
+        if not session['user_id']:
+            return {"error":"unauthorized"}, 401
         else:
-            try:
-                new_recipe = Recipe(
+            new_recipe = Recipe(
                 title = json['title'],
                 instructions = json['instructions'],
                 minutes_to_complete = json['minutes_to_complete'],
                 user_id = session['user_id'],
-                )
-            
-                db.session.add(new_recipe)
+            )
+            db.session.add(new_recipe)
+            try:    
                 db.session.commit()
-                return new_recipe.to_dict(), 201
-            except IntegrityError as e:
+            except IntegrityError:
                 db.session.rollback()
-                return make_response({"error":"unprocessable entity"}, 422)
+                return {"error":"unprocessable entity"}, 422
+            return new_recipe.to_dict(), 201
 
 api.add_resource(Signup, '/signup', endpoint='signup')
 api.add_resource(CheckSession, '/check_session', endpoint='check_session')

@@ -1,14 +1,15 @@
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy_serializer import SerializerMixin
 from sqlalchemy.orm import validates
-from sqlalchemy import ForeignKey, CheckConstraint
-from sqlalchemy.exc import IntegrityError
+# from sqlalchemy import ForeignKey
+# from sqlalchemy.exc import IntegrityError
 
 from config import db, bcrypt
 
 class User(db.Model, SerializerMixin):
     __tablename__ = 'users'
-
+    serialize_rules = ('-recipes.user',)
+    
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String, unique=True, nullable=False)
     _password_hash = db.Column(db.String)
@@ -16,8 +17,6 @@ class User(db.Model, SerializerMixin):
     bio = db.Column(db.String)
 
     recipes = db.relationship('Recipe', backref='user')
-
-    serialize_rules = ('-recipes.user',)
 
     @hybrid_property
     def password_hash(self):
@@ -38,26 +37,15 @@ class User(db.Model, SerializerMixin):
 
 class Recipe(db.Model, SerializerMixin):
     __tablename__ = 'recipes'
+    __table_args__= (db.CheckConstraint('length(instructions) >= 50'),)
+    serialize_rules = ('-user.recipes',)
     
     id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String, nullable = False)
-    instructions = db.Column(db.String, CheckConstraint('LENGTH(instructions) >= 50',))
+    title = db.Column(db.String, nullable=False)
+    instructions = db.Column(db.String, nullable=False)
     minutes_to_complete = db.Column(db.Integer)
 
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-
-    @validates('title')
-    def check_title(self, key, title):
-        if title == '':
-            raise ValueError('All recipes must have a title')
-        return title
-    @validates('instructions')
-    def validate_instructions(self, key, instructions):
-        if instructions == '':
-            raise ValueError('All recipes must have instructions')
-        if len(instructions) < 50:
-            raise ValueError('Instructions must be greater than 50 characters.')
-        return instructions
     
     def __repr__(self):
         return f'Recipe Title: {self.title}, Instructions: {self.instructions}, Length: {self.minutes_to_complete}'
