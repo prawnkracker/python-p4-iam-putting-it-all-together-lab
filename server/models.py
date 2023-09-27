@@ -37,7 +37,7 @@ class User(db.Model, SerializerMixin):
 
 class Recipe(db.Model, SerializerMixin):
     __tablename__ = 'recipes'
-    __table_args__= (db.CheckConstraint('length(instructions) >= 50'),)
+    __table_args__= (db.CheckConstraint('LENGTH(instructions) >= 50'),)
     serialize_rules = ('-user.recipes',)
     
     id = db.Column(db.Integer, primary_key=True)

@@ -80,10 +80,11 @@ class RecipeIndex(Resource):
             db.session.add(new_recipe)
             try:    
                 db.session.commit()
+                return new_recipe.to_dict(), 201
             except IntegrityError:
                 db.session.rollback()
                 return {"error":"unprocessable entity"}, 422
-            return new_recipe.to_dict(), 201
+            
 
 api.add_resource(Signup, '/signup', endpoint='signup')
 api.add_resource(CheckSession, '/check_session', endpoint='check_session')
